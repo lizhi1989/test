@@ -1,131 +1,112 @@
-import React from "react";
-import { Tag, Tree, Icon } from "antd";
+import React, { Component } from "react";
+import { Button, Icon } from "antd";
 
-const TreeNode = Tree.TreeNode;
+class ButtonRow extends Component {
+  serverRender = () => {
+    const { data } = this.props;
+    const disabled = this.serverDisabled(data);
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "space-between"
+        }}
+      >
+        <Button type="secondary" id="1" disabled={true}>
+          Back
+        </Button>
+        <Button type="primary" onClick={this.props.onPreview}>
+          Request Preview
+        </Button>
+        <Button
+          type="primary"
+          id="0"
+          style={{ float: "right" }}
+          onClick={this.props.onNext}
+          disabled={disabled}
+        >
+          {disabled ? (
+            <Icon type="close-circle" style={{ color: "#f5222d" }} />
+          ) : (
+            <Icon type="check-circle" />
+          )}
+          Next
+        </Button>
+      </div>
+    );
+  };
+  advanceRender = () => {
+    const disabled = false;
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "space-between"
+        }}
+      >
+        <Button type="secondary" id="2" onClick={this.props.onBack}>
+          Back
+        </Button>
+        <Button type="primary" onClick={this.props.onPreview}>
+          Request Preview
+        </Button>
+        <Button
+          type="primary"
+          id="2"
+          style={{ float: "right" }}
+          onClick={this.props.onSubmit}
+          disabled={disabled}
+        >
+          {disabled ? (
+            <Icon type="close-circle" style={{ color: "#f5222d" }} />
+          ) : (
+            <Icon type="check-circle" />
+          )}
+          Submit
+        </Button>
+      </div>
+    );
+  };
+  serverDisabled = data => {
+    if (data.gtm) {
+      if (
+        Object.values(data.gtm).filter(item => item.wideip.length === 0)
+          .length > 0
+      ) {
+        return true;
+      }
+    }
+    if (data.ltm) {
+      if (
+        Object.values(data.ltm).filter(item => {
+          return (
+            item.vs_name.length === 0 ||
+            item.vip.length === 0 ||
+            item.vipport.length === 0 ||
+            item.snatip.length === 0 ||
+            Object.values(item.servers).filter(svr => {
+              return svr.ipaddress.length === 0 || svr.port.length === 0;
+            }).length > 0
+          );
+        }).length > 0
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+  buttonRender = () => {
+    if (this.props.current === 0) {
+      return this.serverRender();
+    } else if (this.props.current === 1) {
+      return this.advanceRender();
+    }
+  };
+  render() {
+    return <div>{this.buttonRender()}</div>;
+  }
+}
 
-const colorTag = {
-  CREATE: "blue",
-  DELETE: "red",
-  UPDATE: "red",
-  OWNERSHIP: "blue"
-};
-
-// const RequestShortDesc = ({ record }) => (
-//   <div>
-//     {record.items.map(item => (
-//       <div key={item.id}>
-//         {Object.values(item.wideip).map((wip, wip_num) => (
-//           <div key={wip.name}>
-//             <Tree showLine defaultExpandAll={true}>
-//               <TreeNode
-//                 title={
-//                   <div>
-//                     <Tag color={colorTag[item.CRUD]} style={{ cursor: "text" }}>
-//                       {item.CRUD}
-//                     </Tag>
-//                     {wip.name}
-//                   </div>
-//                 }
-//                 key={wip.num}
-//               >
-//                 {Object.values(wip.pools).map(pool => (
-//                   <TreeNode title={pool.name} key={`${wip.num}-${pool.id}`}>
-//                     {pool.servers.map(svr => (
-//                       <TreeNode
-//                         title={
-//                           svr.pub_destination ? (
-//                             <span>
-//                               {svr.destination} (
-//                               <span style={{ color: "red" }}>
-//                                 {svr.pub_destination}
-//                               </span>
-//                               )
-//                             </span>
-//                           ) : (
-//                             svr.destination
-//                           )
-//                         }
-//                         key={`${wip.num}-${pool.id}-${svr.id}`}
-//                       />
-//                     ))}
-//                   </TreeNode>
-//                 ))}
-//               </TreeNode>
-//             </Tree>
-//           </div>
-//         ))}
-//       </div>
-//     ))}
-//   </div>
-// );
-
-const lbDict = {
-  "round-robin": "Round Robin",
-  "global-availability": "Global Availability"
-};
-
-const convertTime = time =>
-  time
-    .split("T")
-    .join(" ")
-    .substring(0, time.lastIndexOf(":00+"));
-
-const RequestShortDesc = ({ record }) => {
-  return (
-    <div>
-      {record.items.map(item => (
-        <div key={item.id}>
-          <span>
-            <Icon type="calendar" /> {convertTime(item.impl_time)}
-          </span>
-          {Object.values(item.wideip).map(wip => (
-            <div key={wip.name}>
-              <span>
-                <Icon type="fork" /> {lbDict[wip.loadbalance]}
-              </span>
-              <Tree showLine defaultExpandAll={true}>
-                <TreeNode
-                  title={
-                    <div>
-                      <Tag
-                        color={colorTag[item.CRUD]}
-                        style={{ cursor: "text" }}
-                      >
-                        {item.CRUD}
-                      </Tag>
-                      {wip.name}
-                    </div>
-                  }
-                  key={wip.num}
-                >
-                  {Object.values(wip.pools).map(pool =>
-                    pool.servers.length === 1 ? (
-                      <TreeNode
-                        title={
-                          pool.servers[0].pub_destination ? (
-                            <span>
-                              {pool.servers[0].destination} (
-                              <span style={{ color: "red" }}>
-                                {pool.servers[0].pub_destination}
-                              </span>
-                              )
-                            </span>
-                          ) : (
-                            pool.servers[0].destination
-                          )
-                        }
-                        key={`${wip.num}-${pool.id}`}
-                      />
-                    ) : null
-                  )}
-                </TreeNode>
-              </Tree>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export default RequestShortDesc;
+export default ButtonRow;
