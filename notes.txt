@@ -1,0 +1,10 @@
+## test machine
+- query Invensys API and store AppCode and LOB information
+- Map LOB to LTMs (DB relationship)
+- Toggle between existing VS
+
+##assumption
+- They select DCE & DCW LTMs
+- Focus on ENT
+- The routing for the LTMs are taken care of
+- A set of LTMs are assign to LOB 
